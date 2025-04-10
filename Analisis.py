@@ -5,12 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 from datetime import datetime, timedelta
-
+from google import genai
 
 
 #############################################
-#token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
-#client = genai.client(api_key=token)
+token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
+client = genai.client(api_key=token)
 #############################################
 
 st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
@@ -49,12 +49,9 @@ st.header('Descripción de la Compañía')
 for key, value in info.items():
     st.write(f'**{key}**: {value}')
 
-#promt = "este es el texto a traducir en 500 caracteres"
-#response = client.models.generate_content( 
-#    model="gemini-2.0-flash" 
-#    content = promt + key
-#)
-#print(response)
+promt = "este es el texto a traducir en 500 caracteres"
+response = client.models.generate_content( model="gemini-2.0-flash", contents=promt)
+print(response)
 
 
 # Análisis estadístico
