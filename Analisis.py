@@ -5,12 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 from datetime import datetime, timedelta
-import genericpath as g
+import genericpath as gen
+import google as genai
 
 
 #############################################
 token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
-client = g.client(api_key=token)
+client = genai.client(api_key=token)
 #############################################
 
 st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
