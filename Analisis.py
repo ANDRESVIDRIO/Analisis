@@ -50,7 +50,7 @@ for key, value in info.items():
     st.write(f'**{key}**: {value}')
 
 promt = "este es el texto a traducir en 500 caracteres"
-response = client.models.generate_content( model="gemini-2.0-flash", contents=promt)
+response = client.models.generate_content( model="gemini-2.0-flash", contents= promt + info)
 print(response)
 
 
