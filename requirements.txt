@@ -1,0 +1,7 @@
+yfinance==0.2.55
+streamlit==1.42.0
+pandas==2.2.3
+numpy==2.2.2
+seaborn==0.13.2
+matplotlib==3.10.1
+google-generativeai

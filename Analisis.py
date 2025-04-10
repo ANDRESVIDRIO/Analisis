@@ -3,9 +3,10 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sb
 from datetime import datetime, timedelta
 from google import genai
-from google.genai import types
+from google.genai import typ
 
 
 #############################################
