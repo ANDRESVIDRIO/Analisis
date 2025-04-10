@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 from datetime import datetime, timedelta
-from google.genai import typ
+
 
 
 #############################################
