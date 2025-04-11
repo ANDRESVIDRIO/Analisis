@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
-
+from scipy.stats import norm
 
 # Configuración del estilo CSS personalizado
 
@@ -92,63 +92,53 @@ if seccion == "Análisis Estadístico":
             ticker = yf.Ticker(symbol)
             data = ticker.history(period='5y')['Close'].dropna()
 
-            # Estadísticas descriptivas ampliadas
-            stats = {
-                'Media': data.mean(),
-                'Mediana': data.median(),
-                'Desviación Estándar': data.std(),
-                'Varianza': data.var(),
-                'Mínimo': data.min(),
-                'Máximo': data.max(),
-                'Rango': data.max() - data.min(),
-                'Coef. de Variación': data.std() / data.mean(),
-                'Curtosis': data.kurtosis(),
-                'Asimetría': data.skew(),
-            }
+            # Cálculo de rendimientos logarítmicos
+            returns = np.log(data / data.shift(1)).dropna()
 
-            st.subheader("**Estadísticas descriptivas**")
-            for key, value in stats.items():
-                st.write(f'**{key}**: {value:.2f}')
+            # Media y desviación estándar para la curva normal
+            mu, sigma = returns.mean(), returns.std()
+            x = np.linspace(returns.min(), returns.max(), 100)
+            y = norm.pdf(x, mu, sigma)
 
-            # Gráfica de dispersión con tendencia
-            st.subheader("**Gráfica de dispersión del precio de cierre**")
-            fechas = data.index
-            precios = data.values
-            dias = np.arange(len(precios))  # convertir fechas a días para el eje x numérico
-
+            # Gráfico con Plotly
             fig = go.Figure()
 
-            fig.add_trace(go.Scatter(
-                x=dias,
-                y=precios,
-                mode='markers',
-                name='Precios de cierre',
-                marker=dict(color='blue', size=4),
-                hovertemplate='Día %{x}<br>Precio: %{y:.2f}<extra></extra>'
+            # Histograma de rendimientos
+            fig.add_trace(go.Histogram(
+                x=returns,
+                histnorm='probability density',
+                name='Distribución de rendimientos',
+                marker_color='lightblue',
+                opacity=0.75,
+                nbinsx=50
             ))
 
-            # Línea de tendencia lineal
-            coef = np.polyfit(dias, precios, 1)
-            tendencia = np.poly1d(coef)
+            # Curva de distribución normal teórica
             fig.add_trace(go.Scatter(
-                x=dias,
-                y=tendencia(dias),
+                x=x,
+                y=y,
                 mode='lines',
-                name='Tendencia lineal',
-                line=dict(color='red', dash='dash'),
-                hoverinfo='skip'
+                name='Distribución Normal',
+                line=dict(color='red', width=2)
             ))
 
             fig.update_layout(
-                title=f'Dispersión del precio de cierre - {symbol.upper()}',
-                xaxis_title='Días',
-                yaxis_title='Precio de cierre',
-                showlegend=True,
+                title=f'Distribución de Rendimientos - {symbol.upper()}',
+                xaxis_title='Rendimientos logarítmicos',
+                yaxis_title='Densidad',
                 template='plotly_white',
+                showlegend=True,
                 height=500
             )
 
             st.plotly_chart(fig, use_container_width=True)
+
+            # Estadísticas adicionales
+            st.subheader("**Estadísticas de los Rendimientos**")
+            st.write(f"**Media**: {mu:.4f}")
+            st.write(f"**Desviación Estándar**: {sigma:.4f}")
+            st.write(f"**Asimetría**: {returns.skew():.4f}")
+            st.write(f"**Curtosis**: {returns.kurtosis():.4f}")
 
         except Exception as e:
             st.error(f'Error en el análisis estadístico: {e}')

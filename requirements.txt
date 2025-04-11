@@ -6,3 +6,4 @@ seaborn==0.13.2
 matplotlib==3.10.1
 google-generativeai==0.3.2
 plotly==5.20.0
+scipy==1.13.0
