@@ -6,16 +6,17 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
 
-seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Monte Carlo","Medias móviles","Cartera Eficiente Acciones"])
+st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
+
+st.title('Análisis Financiero Avanzado de Emisoras')
+
+seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
 #############################################
 #token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
 #client = genai.client(api_key=token)
 #############################################
 
-st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
-
-st.title('Análisis Financiero Avanzado de Emisoras')
 
 # Input de la emisora
 symbol = st.text_input('Ingrese el símbolo de la emisora (por ejemplo, AAPL)', 'AAPL')
@@ -76,8 +77,8 @@ if seccion == "Análisis Estadístico":
       st.error(f'Error en el análisis estadístico: {e}')
 
 
-if seccion == "Informacion general":
-   st.header("**Informacion general**") 
+if seccion == "Comparactiva contra el indice":
+   st.header("**Comparactiva contra el indice**") 
    # Gráfico de precios vs índice
    period = st.selectbox('Periodo', ['1y', '5y', '10y'])
    index = st.text_input('Ingrese el índice de referencia (por ejemplo, ^GSPC)', '^GSPC')
@@ -133,8 +134,7 @@ if seccion == "Informacion general":
 
 
 if seccion == "Medias móviles":
-   st.header("**Medias móviles**") 
-
+ 
    st.title("📈 Análisis Técnico de Acciones")
    st.write("Este dashboard permite realizar un análisis técnico detallado con indicadores clave.")
 
@@ -261,9 +261,7 @@ if seccion == "Medias móviles":
    """)
 
 
-if seccion == "Cartera Eficiente Acciones":
-   st.header("**Cartera Eficiente Acciones**")  
-
+if seccion == "Cartera Eficiente":
 
    # Configuración de la app
    st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
