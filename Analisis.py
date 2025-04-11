@@ -52,8 +52,8 @@ def get_company_info(ticker):
 
 if seccion == "Informacion general":
     st.header("**Información general**")
-
-    symbol = st.text_input("Ingrese el símbolo de la emisora (por ejemplo, AAPL)", "AAPL")
+    symbol = st.text_input("Ingrese el símbolo de la emisora (por ejemplo, AAPL)", "AAPL", key="info_symbol")
+   
 
     if symbol:
         try:
