@@ -21,13 +21,11 @@ seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístic
 # Input de la emisora
 symbol = st.text_input('Ingrese el símbolo de la emisora (por ejemplo, AAPL)', 'AAPL')
 
-if seccion == "Informacion general":
-   st.header("**Informacion general**") 
-   # Función para obtener información de la compañía
-   def get_company_info(ticker):
-        try:
-           info = ticker.info
-           return {
+# Sección: Información General
+def get_company_info(ticker):
+    try:
+        info = ticker.info
+        return {
             'Nombre': info.get('shortName', 'Falta de información'),
             'País': info.get('country', 'Falta de información'),
             'Sector': info.get('sector', 'Falta de información'),
@@ -39,9 +37,26 @@ if seccion == "Informacion general":
             'Market Cap': info.get('marketCap', 'Falta de información'),
             'Dividend Yield': info.get('dividendYield', 'Falta de información')
         }
-        except Exception as e:
-          st.error(f'Error al obtener la información de la emisora: {e}')
+    except Exception as e:
+        st.error(f'Error al obtener la información de la emisora: {e}')
         return {}
+
+if seccion == "Informacion general":
+    st.header("**Información general**")
+
+    if symbol:
+        try:
+            ticker = yf.Ticker(symbol)
+            info = get_company_info(ticker)
+            for key, value in info.items():
+                st.write(f'**{key}**: {value}')
+        except Exception as e:
+            st.error(f"No se pudo obtener información para el símbolo '{symbol}': {e}")
+    else:
+        st.warning("Por favor, ingresa un símbolo válido.")
+
+
+
 
 # Obtener los datos de la emisora
 ticker = yf.Ticker(symbol)
