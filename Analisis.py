@@ -8,61 +8,7 @@ import seaborn as sb
 
 
 # Configuración del estilo CSS personalizado
-st.markdown(
-    """
-    <style>
-    /* Color del fondo principal (caqui) */
-    .stApp {
-        background-color: #D2B48C;  /* Color caqui claro */
-    }
-    
-    /* Color del sidebar (caqui más oscuro) */
-    [data-testid="stSidebar"] {
-        background-color: #D2B48C !important;  /* Color caqui oscuro */
-    }
-    
-    /* Estilo para los widgets en el sidebar */
-    .stSidebar .stSelectbox, 
-    .stSidebar .stSlider, 
-    .stSidebar .stRadio {
-        background-color: #C4A484;  /* Tono intermedio */
-        border-radius: 8px;
-        padding: 8px;
-    }
-    
-    /* Estilo para los títulos */
-    h1, h2, h3 {
-        color: #556B2F !important;  /* Verde oliva para contraste */
-    }
-    
-    /* Estilo para las tarjetas y contenedores */
-    .stDataFrame, .stPlotlyChart, .stPyplot {
-        background-color: #FFF8DC !important;  /* Beige claro para contraste */
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    /* Estilo para los botones */
-    .stButton>button {
-        background-color: #8B4513 !important;  /* SaddleBrown */
-        color: white !important;
-        border-radius: 8px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
-# Creación del sidebar
-with st.sidebar:
-    st.title("Menú de Navegación")
-    seccion = st.radio(
-        "Herramientas",
-        ["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
-         "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
-        index=0
-    )
 #####################################################################################
 st.set_page_config(page_title='Advanced Financial Analysis')
 
