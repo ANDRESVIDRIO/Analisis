@@ -5,7 +5,6 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
-import streamlit_option_menu as option_menu
 
 st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
 
