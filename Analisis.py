@@ -64,7 +64,7 @@ with st.sidebar:
         index=0
     )
 #####################################################################################
-st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
+st.set_page_config(page_title='Advanced Financial Analysis')
 
 st.title('Análisis Financiero Avanzado de Emisoras')
 
