@@ -189,7 +189,7 @@ if seccion == "Comparactiva contra el indice":
 if seccion == "Monte Carlo":
     st.header("📊 Simulación Monte Carlo")
 
-    symbol = st.text_input('Ingrese el símbolo de la emisora (por ejemplo, AAPL)', 'AAPL', key="symbol_montecarlo")
+
     days = st.slider("Días a proyectar", 30, 365, 180)
 
     try:
