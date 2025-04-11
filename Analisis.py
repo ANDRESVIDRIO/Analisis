@@ -13,7 +13,7 @@ st.markdown(
     <style>
     /* Color del fondo principal (caqui) */
     .stApp {
-        background-color: #F5F5DC;  /* Color caqui claro */
+        background-color: #D2B48C;  /* Color caqui claro */
     }
     
     /* Color del sidebar (caqui más oscuro) */
