@@ -186,40 +186,62 @@ if seccion == "Comparactiva contra el indice":
     except Exception as e:
         st.error(f'Error al cargar el gráfico: {e}')
 
-if seccion == "Informacion general":
-   st.header("**Informacion general**") 
-   # Simulación Montecarlo
-   st.header('Simulación Montecarlo')
-   days = st.slider('Días a proyectar', 30, 365, 180)
-   try:
-       returns = data.pct_change().dropna()
-       last_price = data[-1]
-       sim_count = 1000
-       sim_df = pd.DataFrame()
-       final_prices = []
-       for _ in range(sim_count):
-           prices = [last_price]
-           for _ in range(days):
-               prices.append(prices[-1] * (1 + np.random.normal(returns.mean(), returns.std())))
-           sim_df[len(sim_df.columns)] = prices
-           final_prices.append(prices[-1])
-       plt.figure(figsize=(10, 5))
-       plt.plot(sim_df)
-       plt.title(f'Simulación Montecarlo de {symbol}')
-       st.pyplot(plt)
-       final_prices = np.array(final_prices)
-       scenarios = {
-          'más de 10%': np.mean(final_prices >= last_price * 1.10),
-          'más de 5%': np.mean(final_prices >= last_price * 1.05),
-          'más de 0%': np.mean(final_prices >= last_price),
-          'menos de 5%': np.mean(final_prices <= last_price * 0.95),
-          'menos de 10%': np.mean(final_prices <= last_price * 0.90)
-      }
-       st.header('Probabilidades de Escenarios')
-       for scenario, prob in scenarios.items():
-          st.write(f'**Probabilidad de {scenario}**: {prob * 100:.2f}%')
-   except Exception as e:
-       st.error(f'Error en la simulación Montecarlo: {e}')
+if seccion == "Monte Carlo":
+    st.header("**Monte Carlo**")
+    
+    days = st.slider('Días a proyectar', 30, 365, 180)
+    
+    try:
+        returns = data.pct_change().dropna()
+        last_price = data[-1]
+        sim_count = 1000
+        sim_df = pd.DataFrame()
+        final_prices = []
+
+        for i in range(sim_count):
+            prices = [last_price]
+            for _ in range(days):
+                prices.append(prices[-1] * (1 + np.random.normal(returns.mean(), returns.std())))
+            sim_df[i] = prices
+            final_prices.append(prices[-1])
+
+        # Crear gráfico con plotly
+        fig = go.Figure()
+
+        for i in range(min(100, sim_count)):  # Mostrar solo las primeras 100 trayectorias
+            fig.add_trace(go.Scatter(
+                y=sim_df[i],
+                mode='lines',
+                line=dict(width=1),
+                name=f'Sim {i+1}' if i < 10 else None,  # Etiquetas solo para algunas líneas
+                showlegend=False
+            ))
+
+        fig.update_layout(
+            title=f'Simulación Monte Carlo de {symbol} ({sim_count} simulaciones)',
+            xaxis_title='Días',
+            yaxis_title='Precio Simulado',
+            height=500
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Calcular probabilidades
+        final_prices = np.array(final_prices)
+        scenarios = {
+            'más de 10%': np.mean(final_prices >= last_price * 1.10),
+            'más de 5%': np.mean(final_prices >= last_price * 1.05),
+            'más de 0%': np.mean(final_prices >= last_price),
+            'menos de 5%': np.mean(final_prices <= last_price * 0.95),
+            'menos de 10%': np.mean(final_prices <= last_price * 0.90)
+        }
+
+        st.header('📈 Probabilidades de Escenarios')
+        for scenario, prob in scenarios.items():
+            st.write(f'**Probabilidad de {scenario}**: {prob * 100:.2f}%')
+
+    except Exception as e:
+        st.error(f'Error en la simulación Montecarlo: {e}')
 
 
 if seccion == "Medias móviles":
