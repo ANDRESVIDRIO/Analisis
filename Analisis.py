@@ -6,52 +6,75 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
 
+
+# Configuración del estilo CSS personalizado
+st.markdown(
+    """
+    <style>
+    /* Color del fondo principal (caqui) */
+    .stApp {
+        background-color: #F5F5DC;  /* Color caqui claro */
+    }
+    
+    /* Color del sidebar (caqui más oscuro) */
+    [data-testid="stSidebar"] {
+        background-color: #D2B48C !important;  /* Color caqui oscuro */
+    }
+    
+    /* Estilo para los widgets en el sidebar */
+    .stSidebar .stSelectbox, 
+    .stSidebar .stSlider, 
+    .stSidebar .stRadio {
+        background-color: #C4A484;  /* Tono intermedio */
+        border-radius: 8px;
+        padding: 8px;
+    }
+    
+    /* Estilo para los títulos */
+    h1, h2, h3 {
+        color: #556B2F !important;  /* Verde oliva para contraste */
+    }
+    
+    /* Estilo para las tarjetas y contenedores */
+    .stDataFrame, .stPlotlyChart, .stPyplot {
+        background-color: #FFF8DC !important;  /* Beige claro para contraste */
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* Estilo para los botones */
+    .stButton>button {
+        background-color: #8B4513 !important;  /* SaddleBrown */
+        color: white !important;
+        border-radius: 8px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Creación del sidebar
+with st.sidebar:
+    st.title("Menú de Navegación")
+    seccion = st.radio(
+        "Herramientas",
+        ["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
+         "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
+        index=0
+    )
+#####################################################################################
 st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
 
 st.title('Análisis Financiero Avanzado de Emisoras')
 
-#seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
+seccion = st.sidebar.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
 
-import streamlit as st
 
-# Estilos para el selectbox
-st.markdown("""
-<style>
-    div[data-testid="stSelectbox"] > div {
-        display: flex;
-        gap: 10px;
-    }
-    div[data-testid="stSelectbox"] select {
-        padding: 8px 15px;
-        border-radius: 20px;
-        background: #f0f2f6;
-        border: 1px solid #ddd;
-        cursor: pointer;
-    }
-</style>
-""", unsafe_allow_html=True)
 
-seccion = st.selectbox(
-    "Herramientas",
-    options=["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
-             "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
-    label_visibility="collapsed"
-)
 
-# Contenido según selección
-if seccion == "Información general":
-    st.header("Información General")
-elif seccion == "Análisis Estadístico":
-    st.header("Análisis Estadístico")
-elif seccion == "Comparactiva contra el indice":
-    st.header("Comparactiva contra el indice")
-elif seccion == "Monte Carlo":
-    st.header("Monte Carlo")
-elif seccion == "Medias móviles":
-    st.header("Medias móviles") 
-elif seccion == "Cartera Eficiente":
-    st.header("Cartera Eficiente") 
+
 
 
 #############################################
