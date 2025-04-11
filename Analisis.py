@@ -328,94 +328,56 @@ if seccion == "Medias móviles":
 
 if seccion == "Cartera Eficiente":
 
-    st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
-    st.write("Este modelo calcula la combinación óptima de dos activos para minimizar riesgos y maximizar el ratio de Sharpe.")
+    st.title("📊 Frontera Eficiente (2 Activos)")
 
-    st.sidebar.header("🔢 Selección de Activos")
-    ticker1 = st.sidebar.text_input("Ticker del Activo 1 (Ej: AAPL)", value="AAPL")
-    ticker2 = st.sidebar.text_input("Ticker del Activo 2 (Ej: MSFT)", value="MSFT")
-    tasa_libre_riesgo = st.sidebar.number_input("Tasa Libre de Riesgo (%)", value=3.0) / 100
+    # Inputs del usuario
+    ticker1 = st.sidebar.text_input("Ticker Activo 1", value="AAPL")
+    ticker2 = st.sidebar.text_input("Ticker Activo 2", value="MSFT")
+    rf = st.sidebar.number_input("Tasa libre de riesgo (%)", value=3.0) / 100
 
-    def obtener_datos(ticker):
-        df = yf.download(ticker, period="5y")
-        retornos = df['Adj Close'].pct_change().dropna()
-        return retornos
+    # Descargar y calcular retornos
+    def get_returns(ticker):
+        data = yf.download(ticker, period="5y")["Adj Close"]
+        return data.pct_change().dropna()
 
-    retornos1 = obtener_datos(ticker1)
-    retornos2 = obtener_datos(ticker2)
+    r1 = get_returns(ticker1)
+    r2 = get_returns(ticker2)
 
-    if isinstance(retornos1, pd.DataFrame):
-        retornos1 = retornos1.iloc[:, 0]
-    if isinstance(retornos2, pd.DataFrame):
-        retornos2 = retornos2.iloc[:, 0]
+    # Medias y desv. estándar
+    mu1, std1 = r1.mean(), r1.std()
+    mu2, std2 = r2.mean(), r2.std()
+    cov = np.cov(r1, r2)[0, 1]
 
-    r1, std1 = retornos1.mean(), retornos1.std()
-    r2, std2 = retornos2.mean(), retornos2.std()
-    correlacion = np.corrcoef(retornos1, retornos2)[0, 1]
-    cov12 = correlacion * std1 * std2
-
-    cov_matrix = np.array([[std1**2, cov12], [cov12, std2**2]], dtype=float)
-
+    # Simular combinaciones
     pesos = np.linspace(0, 1, 100)
-    rendimientos = pesos * r1 + (1 - pesos) * r2
-    desviaciones = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov12)
-    sharpe_ratios = (rendimientos - tasa_libre_riesgo) / desviaciones
+    rend = pesos * mu1 + (1 - pesos) * mu2
+    riesgo = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov)
+    sharpe = (rend - rf) / riesgo
 
-    idx_min_riesgo = np.argmin(desviaciones)
-    idx_max_sharpe = np.argmax(sharpe_ratios)
+    # Identificar portafolios clave
+    idx_min = np.argmin(riesgo)
+    idx_max = np.argmax(sharpe)
 
-    # Crear gráfica con plotly
+    # Gráfica con Plotly
     fig = go.Figure()
+    fig.add_trace(go.Scatter(x=riesgo, y=rend, mode='lines', name='Frontera Eficiente'))
+    fig.add_trace(go.Scatter(x=[riesgo[idx_min]], y=[rend[idx_min]], mode='markers',
+                             marker=dict(size=10, color='red'), name='Menor Riesgo'))
+    fig.add_trace(go.Scatter(x=[riesgo[idx_max]], y=[rend[idx_max]], mode='markers',
+                             marker=dict(size=10, color='green'), name='Máx Sharpe'))
 
-    # Frontera eficiente
-    fig.add_trace(go.Scatter(
-        x=desviaciones,
-        y=rendimientos,
-        mode='lines',
-        name='Frontera Eficiente',
-        line=dict(color='blue')
-    ))
-
-    # Portafolio de menor riesgo
-    fig.add_trace(go.Scatter(
-        x=[desviaciones[idx_min_riesgo]],
-        y=[rendimientos[idx_min_riesgo]],
-        mode='markers',
-        name='Menor Riesgo',
-        marker=dict(color='red', size=10, symbol='circle')
-    ))
-
-    # Portafolio de máximo Sharpe
-    fig.add_trace(go.Scatter(
-        x=[desviaciones[idx_max_sharpe]],
-        y=[rendimientos[idx_max_sharpe]],
-        mode='markers',
-        name='Óptimo (Max Sharpe)',
-        marker=dict(color='green', size=10, symbol='star')
-    ))
-
-    fig.update_layout(
-        title="Frontera Eficiente de Activos",
-        xaxis_title="Desviación Estándar (Riesgo)",
-        yaxis_title="Rentabilidad Esperada",
-        legend=dict(x=0.01, y=0.99),
-        template="plotly_white"
-    )
+    fig.update_layout(title="Frontera Eficiente con Dos Activos",
+                      xaxis_title="Riesgo (Desviación Estándar)",
+                      yaxis_title="Rentabilidad Esperada",
+                      template="plotly_white")
 
     st.plotly_chart(fig)
 
-    # Mostrar resultados
-    peso_min_riesgo = pesos[idx_min_riesgo]
-    peso_max_sharpe = pesos[idx_max_sharpe]
-    rend_min_riesgo = rendimientos[idx_min_riesgo]
-    rend_max_sharpe = rendimientos[idx_max_sharpe]
-    desv_min_riesgo = desviaciones[idx_min_riesgo]
-    desv_max_sharpe = desviaciones[idx_max_sharpe]
-
-    st.subheader("📌 Resultados")
-    st.write(f"Portafolio de Menor Riesgo: {peso_min_riesgo*100:.2f}% en {ticker1} y {(1-peso_min_riesgo)*100:.2f}% en {ticker2}")
-    st.write(f"Rentabilidad Esperada: {rend_min_riesgo*100:.2f}% | Riesgo: {desv_min_riesgo*100:.2f}%")
+    # Resultados
+    st.subheader("Resultados")
+    st.write(f"📉 Menor Riesgo: {pesos[idx_min]*100:.2f}% {ticker1} / {(1-pesos[idx_min])*100:.2f}% {ticker2}")
+    st.write(f"↪️ Rentabilidad: {rend[idx_min]*100:.2f}%, Riesgo: {riesgo[idx_min]*100:.2f}%")
     st.write("---")
-    st.write(f"Portafolio Óptimo (Máx Sharpe Ratio): {peso_max_sharpe*100:.2f}% en {ticker1} y {(1-peso_max_sharpe)*100:.2f}% en {ticker2}")
-    st.write(f"Rentabilidad Esperada: {rend_max_sharpe*100:.2f}% | Riesgo: {desv_max_sharpe*100:.2f}%")
-    st.write(f"Sharpe Ratio Óptimo: {sharpe_ratios[idx_max_sharpe]:.2f}")
+    st.write(f"📈 Máximo Sharpe: {pesos[idx_max]*100:.2f}% {ticker1} / {(1-pesos[idx_max])*100:.2f}% {ticker2}")
+    st.write(f"↪️ Rentabilidad: {rend[idx_max]*100:.2f}%, Riesgo: {riesgo[idx_max]*100:.2f}%")
+    st.write(f"⭐ Sharpe Ratio: {sharpe[idx_max]:.2f}")
