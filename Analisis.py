@@ -10,15 +10,11 @@ from scipy.stats import norm
 # Configuración del estilo CSS personalizado
 st.image("LOGO.png",width=500)
 #####################################################################################
-st.set_page_config(page_title='Advanced Financial Analysis')
+#st.set_page_config(page_title='Advanced Financial Analysis')
 
-st.title('Análisis Financiero Avanzado de Emisoras')
+st.title('Advanced Financial Analysis')
 
 seccion = st.sidebar.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
-
-
-
-
 
 
 
