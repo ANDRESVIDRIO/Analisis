@@ -8,7 +8,7 @@ import seaborn as sb
 from scipy.stats import norm
 
 # Configuración del estilo CSS personalizado
-
+st.image("LOGO.png",width=500)
 #####################################################################################
 st.set_page_config(page_title='Advanced Financial Analysis')
 
