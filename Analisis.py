@@ -263,11 +263,7 @@ if seccion == "Medias móviles":
 
 if seccion == "Cartera Eficiente Acciones":
    st.header("**Cartera Eficiente Acciones**")  
-   import streamlit as st
-   import numpy as np
-   import pandas as pd
-   import matplotlib.pyplot as plt
-   import yfinance as yf
+
 
    # Configuración de la app
    st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
