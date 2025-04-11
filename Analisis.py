@@ -12,108 +12,47 @@ st.title('Análisis Financiero Avanzado de Emisoras')
 
 #seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
+
 import streamlit as st
 
-# Estilo CSS personalizado para los bullets
+# Estilos para el selectbox
 st.markdown("""
 <style>
-.bullet-menu {
-    list-style-type: none;
-    padding: 0;
-    margin: 0 0 20px 0;
-}
-.bullet-menu li {
-    padding: 8px 15px;
-    margin: 5px 0;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.3s;
-    background-color: #f0f2f6;
-}
-.bullet-menu li:hover {
-    background-color: #e0e2e6;
-    transform: translateX(5px);
-}
-.bullet-menu li.active {
-    background-color: #4CAF50;
-    color: white;
-    font-weight: bold;
-}
+    div[data-testid="stSelectbox"] > div {
+        display: flex;
+        gap: 10px;
+    }
+    div[data-testid="stSelectbox"] select {
+        padding: 8px 15px;
+        border-radius: 20px;
+        background: #f0f2f6;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Definición de las secciones
-secciones = {
-    "Información General": "📊",
-    "Análisis Estadístico": "📈",
-    "Comparativa contra el índice": "⚖️",
-    "Monte Carlo": "🎲",
-    "Medias móviles": "📉",
-    "Cartera Eficiente": "💼"
-}
+seccion = st.selectbox(
+    "Herramientas",
+    options=["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
+             "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
+    label_visibility="collapsed"
+)
 
-# Crear el menú con bullets
-st.markdown("### Herramientas")
-menu_html = "<ul class='bullet-menu'>"
-for i, (seccion, icono) in enumerate(secciones.items()):
-    menu_html += f"""
-    <li onclick="document.getElementById('seccion-{i}').click()">
-        {icono} {seccion}
-    </li>
-    """
-    st.button(seccion, key=f"seccion-{i}", disabled=True, visible=False)
-menu_html += "</ul>"
-st.markdown(menu_html, unsafe_allow_html=True)
+# Contenido según selección
+if seccion == "Información general":
+    st.header("Información General")
+elif seccion == "Análisis Estadístico":
+    st.header("Análisis Estadístico")
+elif seccion == "Comparactiva contra el indice":
+    st.header("Comparactiva contra el indice")
+elif seccion == "Monte Carlo":
+    st.header("Monte Carlo")
+elif seccion == "Medias móviles":
+    st.header("Medias móviles") 
+elif seccion == "Cartera Eficiente":
+    st.header("Cartera Eficiente") 
 
-# Determinar la sección activa
-seccion_activa = None
-for i, seccion in enumerate(secciones.keys()):
-    if st.session_state.get(f"seccion-{i}", False):
-        seccion_activa = seccion
-        break
-
-# Si no se ha seleccionado ninguna, mostrar la primera por defecto
-if seccion_activa is None:
-    seccion_activa = list(secciones.keys())[0]
-
-# Mostrar el contenido correspondiente
-if seccion_activa == "Información General":
-    st.header("📊 Información General")
-    st.write("Contenido de información general...")
-    
-elif seccion_activa == "Análisis Estadístico":
-    st.header("📈 Análisis Estadístico")
-    st.write("Contenido de análisis estadístico...")
-
-elif seccion_activa == "Comparativa contra el índice":
-    st.header("⚖️ Comparativa contra el índice")
-    st.write("Contenido de comparativa...")
-
-elif seccion_activa == "Monte Carlo":
-    st.header("🎲 Monte Carlo")
-    st.write("Contenido de simulación Monte Carlo...")
-
-elif seccion_activa == "Medias móviles":
-    st.header("📉 Medias móviles")
-    st.write("Contenido de medias móviles...")
-
-elif seccion_activa == "Cartera Eficiente":
-    st.header("💼 Cartera Eficiente")
-    st.write("Contenido de cartera eficiente...")
-
-# JavaScript para manejar los clicks (se ejecuta solo una vez)
-st.markdown("""
-<script>
-document.querySelectorAll('.bullet-menu li').forEach(item => {
-    item.addEventListener('click', function() {
-        document.querySelectorAll('.bullet-menu li').forEach(li => {
-            li.classList.remove('active');
-        });
-        this.classList.add('active');
-    });
-});
-</script>
-""", unsafe_allow_html=True)
 
 #############################################
 #token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
