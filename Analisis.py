@@ -5,6 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
+import streamlit_option_menu as option_menu
 
 st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
 
@@ -12,16 +13,21 @@ st.title('Análisis Financiero Avanzado de Emisoras')
 
 #seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
-secciones = {
-    "Información general": "info",
-    "Análisis Estadístico": "stats",
-    "Comparativa contra el índice": "compare",
-    "Monte Carlo": "monte",
-    "Medias móviles": "moving",
-    "Cartera Eficiente": "portfolio"
-}
-
-seccion = st.selectbox("Herramientas", list(secciones.keys()))
+with st.sidebar:
+    seccion = option_menu(
+        menu_title="Herramientas",
+        options=["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
+                "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
+        icons=["info-circle", "bar-chart", "graph-up", "dice", "speedometer", "pie-chart"],
+        menu_icon="tools",
+        default_index=0,
+        styles={
+            "container": {"padding": "5px"},
+            "icon": {"color": "orange", "font-size": "14px"}, 
+            "nav-link": {"font-size": "14px", "text-align": "left", "margin": "0px"},
+            "nav-link-selected": {"background-color": "#4CAF50"},
+        }
+    )
 
 if seccion == "Información general":
     st.write("Información general")
