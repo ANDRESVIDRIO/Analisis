@@ -48,21 +48,55 @@ def get_company_info(ticker):
         st.error(f'Error al obtener la información de la emisora: {e}')
         return {}
 
+
+
 if seccion == "Informacion general":
     st.header("**Información general**")
+
+    symbol = st.text_input("Ingrese el símbolo de la emisora (por ejemplo, AAPL)", "AAPL")
 
     if symbol:
         try:
             ticker = yf.Ticker(symbol)
+            
+            # Información de la compañía
             info = get_company_info(ticker)
             for key, value in info.items():
                 st.write(f'**{key}**: {value}')
+
+            # Precios históricos y rendimientos
+            data = ticker.history(period='5y')['Close'].dropna()
+
+            rend_diario = data.pct_change().dropna()
+            rend_acumulado = (1 + rend_diario).cumprod() - 1
+            rend_anual = rend_diario.mean() * 252
+
+            # Gráfico en plotly
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=data.index, y=data.values,
+                mode='lines',
+                name=f'{symbol}',
+                line=dict(color='royalblue')
+            ))
+            fig.update_layout(
+                title=f'Precio Ajustado de {symbol} - Últimos 5 años',
+                xaxis_title='Fecha',
+                yaxis_title='Precio (USD)',
+                template='plotly_white',
+                height=500
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Mostrar rendimientos
+            st.subheader("📊 Rendimientos")
+            st.write(f"**Rendimiento acumulado (5 años):** {rend_acumulado[-1] * 100:.2f}%")
+            st.write(f"**Rendimiento promedio anual:** {rend_anual * 100:.2f}%")
+
         except Exception as e:
             st.error(f"No se pudo obtener información para el símbolo '{symbol}': {e}")
     else:
         st.warning("Por favor, ingresa un símbolo válido.")
-
-
 
 
 # Obtener los datos de la emisora
