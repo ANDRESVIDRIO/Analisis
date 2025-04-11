@@ -12,41 +12,108 @@ st.title('Análisis Financiero Avanzado de Emisoras')
 
 #seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
+import streamlit as st
+
+# Estilo CSS personalizado para los bullets
 st.markdown("""
 <style>
-    .stSelectbox [data-testid=stSelectbox] {
-        margin-bottom: 20px;
-    }
-    .stSelectbox [data-testid=stSelectbox] select {
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: all 0.3s;
-    }
-    .stSelectbox [data-testid=stSelectbox] select:hover {
-        box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
+.bullet-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+.bullet-menu li {
+    padding: 8px 15px;
+    margin: 5px 0;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s;
+    background-color: #f0f2f6;
+}
+.bullet-menu li:hover {
+    background-color: #e0e2e6;
+    transform: translateX(5px);
+}
+.bullet-menu li.active {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 
-seccion = st.selectbox(
-    "Herramientas",
-    options=["📊 Información General", "📈 Análisis Estadístico", "⚖️ Comparativa contra el índice",
-             "🎲 Monte Carlo", "📉 Medias Móviles", "💼 Cartera Eficiente"]
-)
+# Definición de las secciones
+secciones = {
+    "Información General": "📊",
+    "Análisis Estadístico": "📈",
+    "Comparativa contra el índice": "⚖️",
+    "Monte Carlo": "🎲",
+    "Medias móviles": "📉",
+    "Cartera Eficiente": "💼"
+}
 
-if seccion == "Información general":
-    st.write("Información general")
-elif seccion == "Análisis Estadístico":
-    st.write("Análisis Estadístico") 
-elif seccion == "Comparactiva contra el indice":
-    st.write("Comparactiva contra el indice") 
-elif seccion == "Monte Carlo":
-    st.write("Monte Carlo")
-elif seccion == "Medias móviles":
-    st.write("Medias móviles")
-elif seccion == "Cartera Eficiente":
-    st.write("Cartera Eficiente")
+# Crear el menú con bullets
+st.markdown("### Herramientas")
+menu_html = "<ul class='bullet-menu'>"
+for i, (seccion, icono) in enumerate(secciones.items()):
+    menu_html += f"""
+    <li onclick="document.getElementById('seccion-{i}').click()">
+        {icono} {seccion}
+    </li>
+    """
+    st.button(seccion, key=f"seccion-{i}", disabled=True, visible=False)
+menu_html += "</ul>"
+st.markdown(menu_html, unsafe_allow_html=True)
+
+# Determinar la sección activa
+seccion_activa = None
+for i, seccion in enumerate(secciones.keys()):
+    if st.session_state.get(f"seccion-{i}", False):
+        seccion_activa = seccion
+        break
+
+# Si no se ha seleccionado ninguna, mostrar la primera por defecto
+if seccion_activa is None:
+    seccion_activa = list(secciones.keys())[0]
+
+# Mostrar el contenido correspondiente
+if seccion_activa == "Información General":
+    st.header("📊 Información General")
+    st.write("Contenido de información general...")
+    
+elif seccion_activa == "Análisis Estadístico":
+    st.header("📈 Análisis Estadístico")
+    st.write("Contenido de análisis estadístico...")
+
+elif seccion_activa == "Comparativa contra el índice":
+    st.header("⚖️ Comparativa contra el índice")
+    st.write("Contenido de comparativa...")
+
+elif seccion_activa == "Monte Carlo":
+    st.header("🎲 Monte Carlo")
+    st.write("Contenido de simulación Monte Carlo...")
+
+elif seccion_activa == "Medias móviles":
+    st.header("📉 Medias móviles")
+    st.write("Contenido de medias móviles...")
+
+elif seccion_activa == "Cartera Eficiente":
+    st.header("💼 Cartera Eficiente")
+    st.write("Contenido de cartera eficiente...")
+
+# JavaScript para manejar los clicks (se ejecuta solo una vez)
+st.markdown("""
+<script>
+document.querySelectorAll('.bullet-menu li').forEach(item => {
+    item.addEventListener('click', function() {
+        document.querySelectorAll('.bullet-menu li').forEach(li => {
+            li.classList.remove('active');
+        });
+        this.classList.add('active');
+    });
+});
+</script>
+""", unsafe_allow_html=True)
 
 #############################################
 #token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
