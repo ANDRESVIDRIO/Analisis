@@ -280,40 +280,7 @@ if seccion == "Medias móviles":
        st.plotly_chart(fig_macd, use_container_width=True)
 
 
-   # 📊 Volumen de negociación
-   st.subheader("📈 Volumen de Negociación")
-
-   # Verificar si el DataFrame existe
-   if 'df' in locals() and isinstance(df, pd.DataFrame):
-
-       # Asegurar que el índice sea de tipo fecha
-       df.index = pd.to_datetime(df.index, errors="coerce")
-
-       # Verificar si la columna 'Volume' existe y es una Serie
-       if "Volume" in df.columns and isinstance(df["Volume"], pd.Series):
-           df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce").fillna(0)
-
-           # Crear figura
-           fig, ax = plt.subplots(figsize=(10, 5))  
-
-           # Graficar volumen
-           ax.bar(df.index, df["Volume"].values, color='gray', alpha=0.7)
-
-           # Etiquetas y formato
-           ax.set_title("Volumen de Negociación")
-           ax.set_xlabel("Fecha")
-           ax.set_ylabel("Volumen")
-           ax.grid(axis="y", linestyle="--", alpha=0.5)
-           plt.xticks(rotation=45)  
-
-           # Mostrar gráfico en Streamlit
-           st.pyplot(fig)
-       else:
-           st.error("Error: La columna 'Volume' no existe o no es válida.")
-   else:
-       st.error("Error: El DataFrame no está cargado correctamente.")
-
-
+ 
    # 📌 Conclusión
    st.markdown("### 📊 **Conclusiones**")
    st.markdown("""
@@ -328,14 +295,14 @@ if seccion == "Medias móviles":
 
 if seccion == "Cartera Eficiente":
 
-    st.title("📊 Frontera Eficiente (2 Activos)")
+    st.title("📊 Frontera Eficiente (2 Activos con Matplotlib)")
 
-    # Inputs del usuario
+    # Inputs
     ticker1 = st.sidebar.text_input("Ticker Activo 1", value="AAPL")
     ticker2 = st.sidebar.text_input("Ticker Activo 2", value="MSFT")
     rf = st.sidebar.number_input("Tasa libre de riesgo (%)", value=3.0) / 100
 
-    # Descargar y calcular retornos
+    # Función para obtener retornos
     def get_returns(ticker):
         data = yf.download(ticker, period="5y")["Adj Close"]
         return data.pct_change().dropna()
@@ -343,41 +310,38 @@ if seccion == "Cartera Eficiente":
     r1 = get_returns(ticker1)
     r2 = get_returns(ticker2)
 
-    # Medias y desv. estándar
+    # Medias, desviaciones y covarianza
     mu1, std1 = r1.mean(), r1.std()
     mu2, std2 = r2.mean(), r2.std()
     cov = np.cov(r1, r2)[0, 1]
 
-    # Simular combinaciones
+    # Simulación
     pesos = np.linspace(0, 1, 100)
     rend = pesos * mu1 + (1 - pesos) * mu2
     riesgo = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov)
     sharpe = (rend - rf) / riesgo
 
-    # Identificar portafolios clave
+    # Índices de portafolios clave
     idx_min = np.argmin(riesgo)
     idx_max = np.argmax(sharpe)
 
-    # Gráfica con Plotly
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=riesgo, y=rend, mode='lines', name='Frontera Eficiente'))
-    fig.add_trace(go.Scatter(x=[riesgo[idx_min]], y=[rend[idx_min]], mode='markers',
-                             marker=dict(size=10, color='red'), name='Menor Riesgo'))
-    fig.add_trace(go.Scatter(x=[riesgo[idx_max]], y=[rend[idx_max]], mode='markers',
-                             marker=dict(size=10, color='green'), name='Máx Sharpe'))
-
-    fig.update_layout(title="Frontera Eficiente con Dos Activos",
-                      xaxis_title="Riesgo (Desviación Estándar)",
-                      yaxis_title="Rentabilidad Esperada",
-                      template="plotly_white")
-
-    st.plotly_chart(fig)
+    # Gráfico con matplotlib
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(riesgo, rend, color="blue", label="Frontera Eficiente")
+    ax.scatter(riesgo[idx_min], rend[idx_min], color="red", s=100, label="Menor Riesgo")
+    ax.scatter(riesgo[idx_max], rend[idx_max], color="green", s=100, label="Máx Sharpe")
+    ax.set_title("Frontera Eficiente de 2 Activos")
+    ax.set_xlabel("Riesgo (Desviación Estándar)")
+    ax.set_ylabel("Rentabilidad Esperada")
+    ax.legend()
+    ax.grid(True)
+    st.pyplot(fig)
 
     # Resultados
     st.subheader("Resultados")
-    st.write(f"📉 Menor Riesgo: {pesos[idx_min]*100:.2f}% {ticker1} / {(1-pesos[idx_min])*100:.2f}% {ticker2}")
+    st.write(f"📉 Menor Riesgo: {pesos[idx_min]*100:.2f}% en {ticker1} / {(1-pesos[idx_min])*100:.2f}% en {ticker2}")
     st.write(f"↪️ Rentabilidad: {rend[idx_min]*100:.2f}%, Riesgo: {riesgo[idx_min]*100:.2f}%")
     st.write("---")
-    st.write(f"📈 Máximo Sharpe: {pesos[idx_max]*100:.2f}% {ticker1} / {(1-pesos[idx_max])*100:.2f}% {ticker2}")
+    st.write(f"📈 Máximo Sharpe: {pesos[idx_max]*100:.2f}% en {ticker1} / {(1-pesos[idx_max])*100:.2f}% en {ticker2}")
     st.write(f"↪️ Rentabilidad: {rend[idx_max]*100:.2f}%, Riesgo: {riesgo[idx_max]*100:.2f}%")
     st.write(f"⭐ Sharpe Ratio: {sharpe[idx_max]:.2f}")
