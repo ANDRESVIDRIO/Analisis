@@ -143,24 +143,48 @@ if seccion == "Análisis Estadístico":
 
 
 if seccion == "Comparactiva contra el indice":
-   st.header("**Comparactiva contra el indice**") 
-   # Gráfico de precios vs índice
-   period = st.selectbox('Periodo', ['1y', '5y', '10y'])
-   index = st.text_input('Ingrese el índice de referencia (por ejemplo, ^GSPC)', '^GSPC')
+    st.header("**Comparativa contra el índice**") 
 
-   try:
-       data = ticker.history(period=period)['Close']
-       index_data = yf.Ticker(index).history(period=period)['Close']
-       data = data / data.iloc[0] * 100
-       index_data = index_data / index_data.iloc[0] * 100
-       plt.figure(figsize=(10, 5))
-       plt.plot(data, label=symbol)
-       plt.plot(index_data, label=index)
-       plt.title(f'Comparativa de {symbol} vs {index} (Indexado)')
-       plt.legend()
-       st.pyplot(plt)
-   except Exception as e:
-       st.error(f'Error al cargar el gráfico: {e}')
+    # Parámetros de usuario
+    period = st.selectbox('Periodo', ['1y', '5y', '10y'])
+    index = st.text_input('Ingrese el índice de referencia (por ejemplo, ^GSPC)', '^GSPC')
+
+    try:
+        # Datos del activo y del índice
+        precios = ticker.history(period=period)['Close']
+        precios_indice = yf.Ticker(index).history(period=period)['Close']
+
+        # Indexar ambos a 100
+        precios = precios / precios.iloc[0] * 100
+        precios_indice = precios_indice / precios_indice.iloc[0] * 100
+
+        # Gráfico interactivo con plotly
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=precios.index, y=precios,
+            mode='lines', name=symbol,
+            line=dict(color='blue')
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=precios_indice.index, y=precios_indice,
+            mode='lines', name=index,
+            line=dict(color='orange')
+        ))
+
+        fig.update_layout(
+            title=f'Comparativa de {symbol} vs {index} (Indexado a 100)',
+            xaxis_title='Fecha',
+            yaxis_title='Precio Indexado',
+            legend=dict(x=0.01, y=0.99),
+            height=500
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    except Exception as e:
+        st.error(f'Error al cargar el gráfico: {e}')
 
 if seccion == "Informacion general":
    st.header("**Informacion general**") 
@@ -295,53 +319,75 @@ if seccion == "Medias móviles":
 
 if seccion == "Cartera Eficiente":
 
-    st.title("📊 Frontera Eficiente (2 Activos con Matplotlib)")
+   # Configuración de la app
+   st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
+   st.write("Este modelo calcula la combinación óptima de dos activos para minimizar riesgos y maximizar el ratio de Sharpe.")
 
-    # Inputs
-    ticker1 = st.sidebar.text_input("Ticker Activo 1", value="AAPL")
-    ticker2 = st.sidebar.text_input("Ticker Activo 2", value="MSFT")
-    rf = st.sidebar.number_input("Tasa libre de riesgo (%)", value=3.0) / 100
+   # Selección de acciones
+   st.sidebar.header("🔢 Selección de Activos")
+   ticker1 = st.sidebar.text_input("Ticker del Activo 1 (Ej: AAPL)", value="AAPL")
+   ticker2 = st.sidebar.text_input("Ticker del Activo 2 (Ej: MSFT)", value="MSFT")
+   tasa_libre_riesgo = st.sidebar.number_input("Tasa Libre de Riesgo (%)", value=3.0) / 100
 
-    # Función para obtener retornos
-    def get_returns(ticker):
-        data = yf.download(ticker, period="5y")["Adj Close"]
-        return data.pct_change().dropna()
+   # Descargar datos históricos de Yahoo Finance
+   def obtener_datos(ticker):
+       df = yf.download(ticker, period="5y")
+       retornos = df.pct_change().dropna()
+       return retornos.squeeze()  # Convertir DataFrame a Series si es necesario
 
-    r1 = get_returns(ticker1)
-    r2 = get_returns(ticker2)
+   retornos1 = obtener_datos(ticker1)
+   retornos2 = obtener_datos(ticker2)
 
-    # Medias, desviaciones y covarianza
-    mu1, std1 = r1.mean(), r1.std()
-    mu2, std2 = r2.mean(), r2.std()
-    cov = np.cov(r1, r2)[0, 1]
+   # Asegurar que sean Series
+   if isinstance(retornos1, pd.DataFrame):
+       retornos1 = retornos1.iloc[:, 0]
+   if isinstance(retornos2, pd.DataFrame):
+       retornos2 = retornos2.iloc[:, 0]
 
-    # Simulación
-    pesos = np.linspace(0, 1, 100)
-    rend = pesos * mu1 + (1 - pesos) * mu2
-    riesgo = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov)
-    sharpe = (rend - rf) / riesgo
+   # Cálculo de estadísticas
+   r1, std1 = retornos1.mean(), retornos1.std()
+   r2, std2 = retornos2.mean(), retornos2.std()
+   correlacion = np.corrcoef(retornos1, retornos2)[0, 1]
+   cov12 = correlacion * std1 * std2
 
-    # Índices de portafolios clave
-    idx_min = np.argmin(riesgo)
-    idx_max = np.argmax(sharpe)
+   # Matriz de covarianza corregida
+   cov_matrix = np.array([[std1**2, cov12], [cov12, std2**2]], dtype=float)
+ 
+   # Simulación de combinaciones de activos
+   pesos = np.linspace(0, 1, 100)
+   rendimientos = pesos * r1 + (1 - pesos) * r2
+   desviaciones = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov12)
+   sharpe_ratios = (rendimientos - tasa_libre_riesgo) / desviaciones
+ 
+   # Portafolio de menor riesgo
+   idx_min_riesgo = np.argmin(desviaciones)
+   peso_min_riesgo = pesos[idx_min_riesgo]
+   rend_min_riesgo = rendimientos[idx_min_riesgo]
+   desv_min_riesgo = desviaciones[idx_min_riesgo]
 
-    # Gráfico con matplotlib
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(riesgo, rend, color="blue", label="Frontera Eficiente")
-    ax.scatter(riesgo[idx_min], rend[idx_min], color="red", s=100, label="Menor Riesgo")
-    ax.scatter(riesgo[idx_max], rend[idx_max], color="green", s=100, label="Máx Sharpe")
-    ax.set_title("Frontera Eficiente de 2 Activos")
-    ax.set_xlabel("Riesgo (Desviación Estándar)")
-    ax.set_ylabel("Rentabilidad Esperada")
-    ax.legend()
-    ax.grid(True)
-    st.pyplot(fig)
+   # Portafolio óptimo (máximo Sharpe Ratio)
+   idx_max_sharpe = np.argmax(sharpe_ratios)
+   peso_max_sharpe = pesos[idx_max_sharpe]
+   rend_max_sharpe = rendimientos[idx_max_sharpe]
+   desv_max_sharpe = desviaciones[idx_max_sharpe]
 
-    # Resultados
-    st.subheader("Resultados")
-    st.write(f"📉 Menor Riesgo: {pesos[idx_min]*100:.2f}% en {ticker1} / {(1-pesos[idx_min])*100:.2f}% en {ticker2}")
-    st.write(f"↪️ Rentabilidad: {rend[idx_min]*100:.2f}%, Riesgo: {riesgo[idx_min]*100:.2f}%")
-    st.write("---")
-    st.write(f"📈 Máximo Sharpe: {pesos[idx_max]*100:.2f}% en {ticker1} / {(1-pesos[idx_max])*100:.2f}% en {ticker2}")
-    st.write(f"↪️ Rentabilidad: {rend[idx_max]*100:.2f}%, Riesgo: {riesgo[idx_max]*100:.2f}%")
-    st.write(f"⭐ Sharpe Ratio: {sharpe[idx_max]:.2f}")
+   # Gráfica de la Frontera Eficiente
+   fig, ax = plt.subplots(figsize=(8,5))
+   ax.plot(desviaciones, rendimientos, label="Frontera Eficiente", color="blue")
+   ax.scatter(desv_min_riesgo, rend_min_riesgo, color='red', marker='o', s=100, label='Menor Riesgo')
+   ax.scatter(desv_max_sharpe, rend_max_sharpe, color='green', marker='o', s=100, label='Óptimo (Max Sharpe)')
+   ax.set_xlabel("Desviación Estándar (Riesgo)")
+   ax.set_ylabel("Rentabilidad Esperada")
+   ax.set_title("Frontera Eficiente de Activos")
+   ax.legend()
+   ax.grid(True)
+   st.pyplot(fig)
+
+   # Mostrar resultados
+   st.subheader("📌 Resultados")
+   st.write(f"Portafolio de Menor Riesgo: {peso_min_riesgo*100:.2f}% en {ticker1} y {(1-peso_min_riesgo)*100:.2f}% en {ticker2}")
+   st.write(f"Rentabilidad Esperada: {rend_min_riesgo*100:.2f}% | Riesgo: {desv_min_riesgo*100:.2f}%")
+   st.write("---")
+   st.write(f"Portafolio Óptimo (Máx Sharpe Ratio): {peso_max_sharpe*100:.2f}% en {ticker1} y {(1-peso_max_sharpe)*100:.2f}% en {ticker2}")
+   st.write(f"Rentabilidad Esperada: {rend_max_sharpe*100:.2f}% | Riesgo: {desv_max_sharpe*100:.2f}%")
+   st.write(f"Sharpe Ratio Óptimo: {sharpe_ratios[idx_max_sharpe]:.2f}")
