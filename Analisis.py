@@ -8,7 +8,7 @@ import seaborn as sb
 from scipy.stats import norm
 
 # Configuración del estilo CSS personalizado
-st.image("LOGO.png",width=500)
+st.image("LOGO.png",width=300)
 #####################################################################################
 #st.set_page_config(page_title='Advanced Financial Analysis')
 
@@ -328,75 +328,94 @@ if seccion == "Medias móviles":
 
 if seccion == "Cartera Eficiente":
 
-   # Configuración de la app
-   st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
-   st.write("Este modelo calcula la combinación óptima de dos activos para minimizar riesgos y maximizar el ratio de Sharpe.")
+    st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
+    st.write("Este modelo calcula la combinación óptima de dos activos para minimizar riesgos y maximizar el ratio de Sharpe.")
 
-   # Selección de acciones
-   st.sidebar.header("🔢 Selección de Activos")
-   ticker1 = st.sidebar.text_input("Ticker del Activo 1 (Ej: AAPL)", value="AAPL")
-   ticker2 = st.sidebar.text_input("Ticker del Activo 2 (Ej: MSFT)", value="MSFT")
-   tasa_libre_riesgo = st.sidebar.number_input("Tasa Libre de Riesgo (%)", value=3.0) / 100
+    st.sidebar.header("🔢 Selección de Activos")
+    ticker1 = st.sidebar.text_input("Ticker del Activo 1 (Ej: AAPL)", value="AAPL")
+    ticker2 = st.sidebar.text_input("Ticker del Activo 2 (Ej: MSFT)", value="MSFT")
+    tasa_libre_riesgo = st.sidebar.number_input("Tasa Libre de Riesgo (%)", value=3.0) / 100
 
-   # Descargar datos históricos de Yahoo Finance
-   def obtener_datos(ticker):
-       df = yf.download(ticker, period="5y")
-       retornos = df.pct_change().dropna()
-       return retornos.squeeze()  # Convertir DataFrame a Series si es necesario
+    def obtener_datos(ticker):
+        df = yf.download(ticker, period="5y")
+        retornos = df['Adj Close'].pct_change().dropna()
+        return retornos
 
-   retornos1 = obtener_datos(ticker1)
-   retornos2 = obtener_datos(ticker2)
+    retornos1 = obtener_datos(ticker1)
+    retornos2 = obtener_datos(ticker2)
 
-   # Asegurar que sean Series
-   if isinstance(retornos1, pd.DataFrame):
-       retornos1 = retornos1.iloc[:, 0]
-   if isinstance(retornos2, pd.DataFrame):
-       retornos2 = retornos2.iloc[:, 0]
+    if isinstance(retornos1, pd.DataFrame):
+        retornos1 = retornos1.iloc[:, 0]
+    if isinstance(retornos2, pd.DataFrame):
+        retornos2 = retornos2.iloc[:, 0]
 
-   # Cálculo de estadísticas
-   r1, std1 = retornos1.mean(), retornos1.std()
-   r2, std2 = retornos2.mean(), retornos2.std()
-   correlacion = np.corrcoef(retornos1, retornos2)[0, 1]
-   cov12 = correlacion * std1 * std2
+    r1, std1 = retornos1.mean(), retornos1.std()
+    r2, std2 = retornos2.mean(), retornos2.std()
+    correlacion = np.corrcoef(retornos1, retornos2)[0, 1]
+    cov12 = correlacion * std1 * std2
 
-   # Matriz de covarianza corregida
-   cov_matrix = np.array([[std1**2, cov12], [cov12, std2**2]], dtype=float)
- 
-   # Simulación de combinaciones de activos
-   pesos = np.linspace(0, 1, 100)
-   rendimientos = pesos * r1 + (1 - pesos) * r2
-   desviaciones = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov12)
-   sharpe_ratios = (rendimientos - tasa_libre_riesgo) / desviaciones
- 
-   # Portafolio de menor riesgo
-   idx_min_riesgo = np.argmin(desviaciones)
-   peso_min_riesgo = pesos[idx_min_riesgo]
-   rend_min_riesgo = rendimientos[idx_min_riesgo]
-   desv_min_riesgo = desviaciones[idx_min_riesgo]
+    cov_matrix = np.array([[std1**2, cov12], [cov12, std2**2]], dtype=float)
 
-   # Portafolio óptimo (máximo Sharpe Ratio)
-   idx_max_sharpe = np.argmax(sharpe_ratios)
-   peso_max_sharpe = pesos[idx_max_sharpe]
-   rend_max_sharpe = rendimientos[idx_max_sharpe]
-   desv_max_sharpe = desviaciones[idx_max_sharpe]
+    pesos = np.linspace(0, 1, 100)
+    rendimientos = pesos * r1 + (1 - pesos) * r2
+    desviaciones = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov12)
+    sharpe_ratios = (rendimientos - tasa_libre_riesgo) / desviaciones
 
-   # Gráfica de la Frontera Eficiente
-   fig, ax = plt.subplots(figsize=(8,5))
-   ax.plot(desviaciones, rendimientos, label="Frontera Eficiente", color="blue")
-   ax.scatter(desv_min_riesgo, rend_min_riesgo, color='red', marker='o', s=100, label='Menor Riesgo')
-   ax.scatter(desv_max_sharpe, rend_max_sharpe, color='green', marker='o', s=100, label='Óptimo (Max Sharpe)')
-   ax.set_xlabel("Desviación Estándar (Riesgo)")
-   ax.set_ylabel("Rentabilidad Esperada")
-   ax.set_title("Frontera Eficiente de Activos")
-   ax.legend()
-   ax.grid(True)
-   st.pyplot(fig)
+    idx_min_riesgo = np.argmin(desviaciones)
+    idx_max_sharpe = np.argmax(sharpe_ratios)
 
-   # Mostrar resultados
-   st.subheader("📌 Resultados")
-   st.write(f"Portafolio de Menor Riesgo: {peso_min_riesgo*100:.2f}% en {ticker1} y {(1-peso_min_riesgo)*100:.2f}% en {ticker2}")
-   st.write(f"Rentabilidad Esperada: {rend_min_riesgo*100:.2f}% | Riesgo: {desv_min_riesgo*100:.2f}%")
-   st.write("---")
-   st.write(f"Portafolio Óptimo (Máx Sharpe Ratio): {peso_max_sharpe*100:.2f}% en {ticker1} y {(1-peso_max_sharpe)*100:.2f}% en {ticker2}")
-   st.write(f"Rentabilidad Esperada: {rend_max_sharpe*100:.2f}% | Riesgo: {desv_max_sharpe*100:.2f}%")
-   st.write(f"Sharpe Ratio Óptimo: {sharpe_ratios[idx_max_sharpe]:.2f}")
+    # Crear gráfica con plotly
+    fig = go.Figure()
+
+    # Frontera eficiente
+    fig.add_trace(go.Scatter(
+        x=desviaciones,
+        y=rendimientos,
+        mode='lines',
+        name='Frontera Eficiente',
+        line=dict(color='blue')
+    ))
+
+    # Portafolio de menor riesgo
+    fig.add_trace(go.Scatter(
+        x=[desviaciones[idx_min_riesgo]],
+        y=[rendimientos[idx_min_riesgo]],
+        mode='markers',
+        name='Menor Riesgo',
+        marker=dict(color='red', size=10, symbol='circle')
+    ))
+
+    # Portafolio de máximo Sharpe
+    fig.add_trace(go.Scatter(
+        x=[desviaciones[idx_max_sharpe]],
+        y=[rendimientos[idx_max_sharpe]],
+        mode='markers',
+        name='Óptimo (Max Sharpe)',
+        marker=dict(color='green', size=10, symbol='star')
+    ))
+
+    fig.update_layout(
+        title="Frontera Eficiente de Activos",
+        xaxis_title="Desviación Estándar (Riesgo)",
+        yaxis_title="Rentabilidad Esperada",
+        legend=dict(x=0.01, y=0.99),
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig)
+
+    # Mostrar resultados
+    peso_min_riesgo = pesos[idx_min_riesgo]
+    peso_max_sharpe = pesos[idx_max_sharpe]
+    rend_min_riesgo = rendimientos[idx_min_riesgo]
+    rend_max_sharpe = rendimientos[idx_max_sharpe]
+    desv_min_riesgo = desviaciones[idx_min_riesgo]
+    desv_max_sharpe = desviaciones[idx_max_sharpe]
+
+    st.subheader("📌 Resultados")
+    st.write(f"Portafolio de Menor Riesgo: {peso_min_riesgo*100:.2f}% en {ticker1} y {(1-peso_min_riesgo)*100:.2f}% en {ticker2}")
+    st.write(f"Rentabilidad Esperada: {rend_min_riesgo*100:.2f}% | Riesgo: {desv_min_riesgo*100:.2f}%")
+    st.write("---")
+    st.write(f"Portafolio Óptimo (Máx Sharpe Ratio): {peso_max_sharpe*100:.2f}% en {ticker1} y {(1-peso_max_sharpe)*100:.2f}% en {ticker2}")
+    st.write(f"Rentabilidad Esperada: {rend_max_sharpe*100:.2f}% | Riesgo: {desv_max_sharpe*100:.2f}%")
+    st.write(f"Sharpe Ratio Óptimo: {sharpe_ratios[idx_max_sharpe]:.2f}")
