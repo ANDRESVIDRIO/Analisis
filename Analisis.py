@@ -187,11 +187,14 @@ if seccion == "Comparactiva contra el indice":
         st.error(f'Error al cargar el gráfico: {e}')
 
 if seccion == "Monte Carlo":
-    st.header("**Monte Carlo**")
-    
-    days = st.slider('Días a proyectar', 30, 365, 180)
-    
+    st.header("📊 Simulación Monte Carlo")
+
+    ticker_input = st.text_input("Ingrese el ticker del activo (Ej: AAPL)", value="AAPL")
+    days = st.slider("Días a proyectar", 30, 365, 180)
+
     try:
+        ticker = yf.Ticker(ticker_input)
+        data = ticker.history(period="5y")["Close"]
         returns = data.pct_change().dropna()
         last_price = data[-1]
         sim_count = 1000
@@ -205,20 +208,20 @@ if seccion == "Monte Carlo":
             sim_df[i] = prices
             final_prices.append(prices[-1])
 
-        # Crear gráfico con plotly
+        # Gráfico interactivo con Plotly
         fig = go.Figure()
 
-        for i in range(min(100, sim_count)):  # Mostrar solo las primeras 100 trayectorias
+        for i in range(min(100, sim_count)):
             fig.add_trace(go.Scatter(
                 y=sim_df[i],
                 mode='lines',
                 line=dict(width=1),
-                name=f'Sim {i+1}' if i < 10 else None,  # Etiquetas solo para algunas líneas
+                name=f'Sim {i+1}' if i < 10 else None,
                 showlegend=False
             ))
 
         fig.update_layout(
-            title=f'Simulación Monte Carlo de {symbol} ({sim_count} simulaciones)',
+            title=f'Simulación Monte Carlo de {ticker_input.upper()} ({sim_count} simulaciones)',
             xaxis_title='Días',
             yaxis_title='Precio Simulado',
             height=500
@@ -226,7 +229,7 @@ if seccion == "Monte Carlo":
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # Calcular probabilidades
+        # Probabilidades de escenarios
         final_prices = np.array(final_prices)
         scenarios = {
             'más de 10%': np.mean(final_prices >= last_price * 1.10),
@@ -236,12 +239,12 @@ if seccion == "Monte Carlo":
             'menos de 10%': np.mean(final_prices <= last_price * 0.90)
         }
 
-        st.header('📈 Probabilidades de Escenarios')
+        st.subheader("📈 Probabilidades de Escenarios")
         for scenario, prob in scenarios.items():
-            st.write(f'**Probabilidad de {scenario}**: {prob * 100:.2f}%')
+            st.write(f"**Probabilidad de {scenario}**: {prob * 100:.2f}%")
 
     except Exception as e:
-        st.error(f'Error en la simulación Montecarlo: {e}')
+        st.error(f"❌ Error en la simulación Montecarlo: {e}")
 
 
 if seccion == "Medias móviles":
