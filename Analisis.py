@@ -13,21 +13,28 @@ st.title('Análisis Financiero Avanzado de Emisoras')
 
 #seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
 
-with st.sidebar:
-    seccion = option_menu(
-        menu_title="Herramientas",
-        options=["Información general", "Análisis Estadístico", "Comparativa contra el índice", 
-                "Monte Carlo", "Medias móviles", "Cartera Eficiente"],
-        icons=["info-circle", "bar-chart", "graph-up", "dice", "speedometer", "pie-chart"],
-        menu_icon="tools",
-        default_index=0,
-        styles={
-            "container": {"padding": "5px"},
-            "icon": {"color": "orange", "font-size": "14px"}, 
-            "nav-link": {"font-size": "14px", "text-align": "left", "margin": "0px"},
-            "nav-link-selected": {"background-color": "#4CAF50"},
-        }
-    )
+st.markdown("""
+<style>
+    .stSelectbox [data-testid=stSelectbox] {
+        margin-bottom: 20px;
+    }
+    .stSelectbox [data-testid=stSelectbox] select {
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    .stSelectbox [data-testid=stSelectbox] select:hover {
+        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+seccion = st.selectbox(
+    "Herramientas",
+    options=["📊 Información General", "📈 Análisis Estadístico", "⚖️ Comparativa contra el índice",
+             "🎲 Monte Carlo", "📉 Medias Móviles", "💼 Cartera Eficiente"]
+)
 
 if seccion == "Información general":
     st.write("Información general")
