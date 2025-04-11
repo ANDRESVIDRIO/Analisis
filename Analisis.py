@@ -10,7 +10,31 @@ st.set_page_config(page_title='Advanced Financial Analysis', layout='wide')
 
 st.title('Análisis Financiero Avanzado de Emisoras')
 
-seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
+#seccion = st.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
+
+secciones = {
+    "Información general": "info",
+    "Análisis Estadístico": "stats",
+    "Comparativa contra el índice": "compare",
+    "Monte Carlo": "monte",
+    "Medias móviles": "moving",
+    "Cartera Eficiente": "portfolio"
+}
+
+seccion = st.selectbox("Herramientas", list(secciones.keys()))
+
+if seccion == "Información general":
+    st.write("Información general")
+elif seccion == "Análisis Estadístico":
+    st.write("Análisis Estadístico") 
+elif seccion == "Comparactiva contra el indice":
+    st.write("Comparactiva contra el indice") 
+elif seccion == "Monte Carlo":
+    st.write("Monte Carlo")
+elif seccion == "Medias móviles":
+    st.write("Medias móviles")
+elif seccion == "Cartera Eficiente":
+    st.write("Cartera Eficiente")
 
 #############################################
 #token = "AIzaSyB1dzithfUMUBywFvdDywU8mT5XKbB_xS8"
