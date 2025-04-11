@@ -85,22 +85,75 @@ info = get_company_info(ticker)
 
 
 if seccion == "Análisis Estadístico":
-   st.header("**Análisis Estadístico**") 
-   # Análisis estadístico
-   try:
-       data = ticker.history(period='5y')['Close']
-       stats = {
-        'Media': data.mean(),
-        'Mediana': data.median(),
-        'Desviación Estándar': data.std(),
-        'Mínimo': data.min(),
-        'Máximo': data.max(),
-        'Coeficiente de Variación': data.std() / data.mean()
-      }
-       for key, value in stats.items():
-           st.write(f'**{key}**: {value:.2f}')
-   except Exception as e:
-      st.error(f'Error en el análisis estadístico: {e}')
+    st.header("**Análisis Estadístico**")
+
+    if symbol:
+        try:
+            ticker = yf.Ticker(symbol)
+            data = ticker.history(period='5y')['Close'].dropna()
+
+            # Estadísticas descriptivas ampliadas
+            stats = {
+                'Media': data.mean(),
+                'Mediana': data.median(),
+                'Desviación Estándar': data.std(),
+                'Varianza': data.var(),
+                'Mínimo': data.min(),
+                'Máximo': data.max(),
+                'Rango': data.max() - data.min(),
+                'Coef. de Variación': data.std() / data.mean(),
+                'Curtosis': data.kurtosis(),
+                'Asimetría': data.skew(),
+            }
+
+            st.subheader("**Estadísticas descriptivas**")
+            for key, value in stats.items():
+                st.write(f'**{key}**: {value:.2f}')
+
+            # Gráfica de dispersión con tendencia
+            st.subheader("**Gráfica de dispersión del precio de cierre**")
+            fechas = data.index
+            precios = data.values
+            dias = np.arange(len(precios))  # convertir fechas a días para el eje x numérico
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(
+                x=dias,
+                y=precios,
+                mode='markers',
+                name='Precios de cierre',
+                marker=dict(color='blue', size=4),
+                hovertemplate='Día %{x}<br>Precio: %{y:.2f}<extra></extra>'
+            ))
+
+            # Línea de tendencia lineal
+            coef = np.polyfit(dias, precios, 1)
+            tendencia = np.poly1d(coef)
+            fig.add_trace(go.Scatter(
+                x=dias,
+                y=tendencia(dias),
+                mode='lines',
+                name='Tendencia lineal',
+                line=dict(color='red', dash='dash'),
+                hoverinfo='skip'
+            ))
+
+            fig.update_layout(
+                title=f'Dispersión del precio de cierre - {symbol.upper()}',
+                xaxis_title='Días',
+                yaxis_title='Precio de cierre',
+                showlegend=True,
+                template='plotly_white',
+                height=500
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        except Exception as e:
+            st.error(f'Error en el análisis estadístico: {e}')
+    else:
+        st.warning("Por favor, ingresa un símbolo válido.")
 
 
 if seccion == "Comparactiva contra el indice":
