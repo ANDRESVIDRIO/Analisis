@@ -6,6 +6,11 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sb
 from scipy.stats import norm
+from scipy.optimize import minimize
+from datetime import datetime, timedelta
+import requests
+from bs4 import BeautifulSoup
+
 
 # Configuración del estilo CSS personalizado
 st.image("LOGO.png",width=300)
@@ -14,7 +19,8 @@ st.image("LOGO.png",width=300)
 
 st.title('Advanced Financial Analysis')
 
-seccion = st.sidebar.radio("Herramientas", ["Informacion general","Análisis Estadístico","Comparactiva contra el indice","Monte Carlo","Medias móviles","Cartera Eficiente"])
+seccion = st.sidebar.radio("Herramientas", ["Informacion general","Monte Carlo","Medias móviles","Cartera Eficiente","creator of sector ETFs"
+""])
 
 
 
@@ -98,6 +104,9 @@ if seccion == "Informacion general":
     else:
         st.warning("Por favor, ingresa un símbolo válido.")
 
+  
+
+
 
 # Obtener los datos de la emisora
 ticker = yf.Ticker(symbol)
@@ -112,71 +121,7 @@ info = get_company_info(ticker)
 #response = client.models.generate_content( model="gemini-2.0-flash", contents= promt + info)
 #print(response)
 
-
-
-if seccion == "Análisis Estadístico":
-    st.header("**Análisis Estadístico**")
-
-    if symbol:
-        try:
-            ticker = yf.Ticker(symbol)
-            data = ticker.history(period='5y')['Close'].dropna()
-
-            # Cálculo de rendimientos logarítmicos
-            returns = np.log(data / data.shift(1)).dropna()
-
-            # Media y desviación estándar para la curva normal
-            mu, sigma = returns.mean(), returns.std()
-            x = np.linspace(returns.min(), returns.max(), 100)
-            y = norm.pdf(x, mu, sigma)
-
-            # Gráfico con Plotly
-            fig = go.Figure()
-
-            # Histograma de rendimientos
-            fig.add_trace(go.Histogram(
-                x=returns,
-                histnorm='probability density',
-                name='Distribución de rendimientos',
-                marker_color='lightblue',
-                opacity=0.75,
-                nbinsx=50
-            ))
-
-            # Curva de distribución normal teórica
-            fig.add_trace(go.Scatter(
-                x=x,
-                y=y,
-                mode='lines',
-                name='Distribución Normal',
-                line=dict(color='red', width=2)
-            ))
-
-            fig.update_layout(
-                title=f'Distribución de Rendimientos - {symbol.upper()}',
-                xaxis_title='Rendimientos logarítmicos',
-                yaxis_title='Densidad',
-                template='plotly_white',
-                showlegend=True,
-                height=500
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Estadísticas adicionales
-            st.subheader("**Estadísticas de los Rendimientos**")
-            st.write(f"**Media**: {mu:.4f}")
-            st.write(f"**Desviación Estándar**: {sigma:.4f}")
-            st.write(f"**Asimetría**: {returns.skew():.4f}")
-            st.write(f"**Curtosis**: {returns.kurtosis():.4f}")
-
-        except Exception as e:
-            st.error(f'Error en el análisis estadístico: {e}')
-    else:
-        st.warning("Por favor, ingresa un símbolo válido.")
-
-
-if seccion == "Comparactiva contra el indice":
+if seccion == "Informacion general":
     st.header("**Comparativa contra el índice**") 
 
     # Parámetros de usuario
@@ -219,6 +164,70 @@ if seccion == "Comparactiva contra el indice":
 
     except Exception as e:
         st.error(f'Error al cargar el gráfico: {e}')
+
+if seccion == "Informacion general":
+
+
+  st.header("**Análisis Estadístico**")
+
+  try:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(period='5y')['Close'].dropna()
+
+        # Cálculo de rendimientos porcentuales
+        returns = data.pct_change().dropna() * 100  # multiplicar por 100 para expresarlo en %
+
+        # Media y desviación estándar para la curva normal
+        mu, sigma = returns.mean(), returns.std()
+        x = np.linspace(returns.min(), returns.max(), 100)
+        y = norm.pdf(x, mu, sigma)
+
+        # Gráfico con Plotly
+        fig = go.Figure()
+
+        # Histograma de rendimientos
+        fig.add_trace(go.Histogram(
+            x=returns,
+            histnorm='probability density',
+            name='Distribución de rendimientos (%)',
+            marker_color='lightblue',
+            opacity=0.75,
+            nbinsx=300
+        ))
+
+        # Curva de distribución normal teórica
+        fig.add_trace(go.Scatter(
+            x=x,
+            y=y,
+            mode='lines',
+            name='Distribución Normal',
+            line=dict(color='red', width=2)
+        ))
+
+        fig.update_layout(
+            title=f'Distribución de Rendimientos (%) - {symbol.upper()}',
+            xaxis_title='Rendimientos diarios (%)',
+            yaxis_title='Densidad',
+            template='plotly_white',
+            showlegend=True,
+            height=500
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Estadísticas adicionales
+        st.subheader("**Estadísticas de los Rendimientos (%)**")
+        st.write(f"**Media**: {mu:.4f}%")
+        st.write(f"**Desviación Estándar**: {sigma:.4f}%")
+        st.write(f"**Asimetría**: {returns.skew():.4f}")
+        st.write(f"**Curtosis**: {returns.kurtosis():.4f}")
+
+  except Exception as e:
+        st.error(f'Error en el análisis estadístico: {e}')
+else:
+    st.warning("Por favor, ingresa un símbolo válido.")
+
+
 
 if seccion == "Monte Carlo":
     st.header("📊 Simulación Monte Carlo")
@@ -286,7 +295,7 @@ if seccion == "Medias móviles":
    st.write("Este dashboard permite realizar un análisis técnico detallado con indicadores clave.")
 
    # Entrada del usuario
-   ticker = st.sidebar.text_input("Ingrese el Ticker de la Acción (Ej: AAPL)", value="AAPL")
+   ticker = symbol
    periodo = st.sidebar.selectbox("Selecciona el Periodo", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"], index=4)
    intervalo = st.sidebar.selectbox("Intervalo de Datos", ["1d", "1h", "30m", "15m", "5m"], index=0)
 
@@ -375,77 +384,350 @@ if seccion == "Medias móviles":
    """)
 
 
+
 if seccion == "Cartera Eficiente":
 
-   # Configuración de la app
-   st.title("📊 Modelo de Eficiencia de Activos y Frontera Eficiente")
-   st.write("Este modelo calcula la combinación óptima de dos activos para minimizar riesgos y maximizar el ratio de Sharpe.")
+   st.title("Optimización de Cartera Eficiente")
 
-   # Selección de acciones
-   st.sidebar.header("🔢 Selección de Activos")
-   ticker1 = st.sidebar.text_input("Ticker del Activo 1 (Ej: AAPL)", value="AAPL")
-   ticker2 = st.sidebar.text_input("Ticker del Activo 2 (Ej: MSFT)", value="MSFT")
-   tasa_libre_riesgo = st.sidebar.number_input("Tasa Libre de Riesgo (%)", value=3.0) / 100
+   # Ingreso libre de símbolos
+   tickers_input = st.text_input("Ingresa los símbolos de acciones o ETFs separados por comas", "AAPL,MSFT,GOOGL")
+   tickers = [t.strip().upper() for t in tickers_input.split(',') if t.strip()]
 
-   # Descargar datos históricos de Yahoo Finance
-   def obtener_datos(ticker):
-       df = yf.download(ticker, period="5y")
-       retornos = df.pct_change().dropna()
-       return retornos.squeeze()  # Convertir DataFrame a Series si es necesario
+   def obtener_pares_finviz(ticker):
+      
 
-   retornos1 = obtener_datos(ticker1)
-   retornos2 = obtener_datos(ticker2)
+      headers = {"User-Agent": ""}
 
-   # Asegurar que sean Series
-   if isinstance(retornos1, pd.DataFrame):
-       retornos1 = retornos1.iloc[:, 0]
-   if isinstance(retornos2, pd.DataFrame):
-       retornos2 = retornos2.iloc[:, 0]
+      url = f"https://finviz.com/quote.ashx?t={ticker}"
+      response = requests.get(url, headers=headers)
+      response.raise_for_status()
+      soup = BeautifulSoup(response.text, "html.parser")
 
-   # Cálculo de estadísticas
-   r1, std1 = retornos1.mean(), retornos1.std()
-   r2, std2 = retornos2.mean(), retornos2.std()
-   correlacion = np.corrcoef(retornos1, retornos2)[0, 1]
-   cov12 = correlacion * std1 * std2
+      link = soup.find("a", string="Peers")
+      if link and "href" in link.attrs:
+         href = link["href"]
+         if "t=" in href:
+            tickers_str = href.split("t=")[1]
+            pares = tickers_str.split(",")
+            return pares
+      return []
 
-   # Matriz de covarianza corregida
-   cov_matrix = np.array([[std1**2, cov12], [cov12, std2**2]], dtype=float)
- 
-   # Simulación de combinaciones de activos
-   pesos = np.linspace(0, 1, 100)
-   rendimientos = pesos * r1 + (1 - pesos) * r2
-   desviaciones = np.sqrt(pesos**2 * std1**2 + (1 - pesos)**2 * std2**2 + 2 * pesos * (1 - pesos) * cov12)
-   sharpe_ratios = (rendimientos - tasa_libre_riesgo) / desviaciones
- 
-   # Portafolio de menor riesgo
-   idx_min_riesgo = np.argmin(desviaciones)
-   peso_min_riesgo = pesos[idx_min_riesgo]
-   rend_min_riesgo = rendimientos[idx_min_riesgo]
-   desv_min_riesgo = desviaciones[idx_min_riesgo]
+   # Selección del número de años
+   anios = st.slider("Selecciona el número de años de datos históricos", 1, 10, 5)
+   fecha_fin = datetime.today()
+   fecha_inicio = fecha_fin - timedelta(days=anios * 365)
+   st.markdown(f"**Período de análisis:** {fecha_inicio.date()} a {fecha_fin.date()}")
 
-   # Portafolio óptimo (máximo Sharpe Ratio)
-   idx_max_sharpe = np.argmax(sharpe_ratios)
-   peso_max_sharpe = pesos[idx_max_sharpe]
-   rend_max_sharpe = rendimientos[idx_max_sharpe]
-   desv_max_sharpe = desviaciones[idx_max_sharpe]
+   # Descargar precios históricos usando 'Close'
+   @st.cache_data
+   def descargar_precios(tickers, start, end):
+      datos = yf.download(tickers, start=start, end=end, group_by='ticker', auto_adjust=False)
 
-   # Gráfica de la Frontera Eficiente
-   fig, ax = plt.subplots(figsize=(8,5))
-   ax.plot(desviaciones, rendimientos, label="Frontera Eficiente", color="blue")
-   ax.scatter(desv_min_riesgo, rend_min_riesgo, color='red', marker='o', s=100, label='Menor Riesgo')
-   ax.scatter(desv_max_sharpe, rend_max_sharpe, color='green', marker='o', s=100, label='Óptimo (Max Sharpe)')
-   ax.set_xlabel("Desviación Estándar (Riesgo)")
-   ax.set_ylabel("Rentabilidad Esperada")
-   ax.set_title("Frontera Eficiente de Activos")
+      if datos.empty:
+         st.warning("Fallo al descargar con fechas, intentando con 'period=5y'...")
+         datos = yf.download(tickers, period="5y", group_by='ticker', auto_adjust=False)
+
+      if datos.empty:
+         st.error("No se pudieron descargar datos. Verifica los símbolos ingresados.")
+         st.stop()
+
+      precios = pd.DataFrame()
+      if isinstance(datos.columns, pd.MultiIndex):
+         for t in tickers:
+            try:
+               precios[t] = datos[t]['Close']
+            except KeyError:
+               st.warning(f"No se encontraron datos para {t}, se omitirá.")
+      else:
+         if 'Close' in datos.columns:
+            precios = datos[['Close']]
+            precios.columns = tickers[:1]
+         else:
+            st.error("No se encontró la columna 'Close'.")
+            st.stop()
+
+      precios.dropna(axis=1, inplace=True)
+      if precios.empty:
+         st.error("No hay suficientes datos válidos tras eliminar columnas con NA.")
+         st.stop()
+
+      return precios
+
+   precios = descargar_precios(tickers, fecha_inicio.strftime("%Y-%m-%d"), fecha_fin.strftime("%Y-%m-%d"))
+   rendimientos = precios.pct_change().dropna()
+
+   # Estadísticas básicas
+   retornos_esperados = rendimientos.mean() * 252
+   cov = rendimientos.cov() * 252
+
+   # Función de rendimiento y riesgo
+   def calcular_portafolio(w, mu, sigma):
+      retorno = np.dot(w, mu)
+      riesgo = np.sqrt(np.dot(w.T, np.dot(sigma, w)))
+      return retorno, riesgo
+
+   # Simulación de portafolios
+   def simular_portafolios(mu, sigma, n=5000):
+      resultados = {'retorno': [], 'riesgo': [], 'sharpe': [], 'pesos': []}
+      for _ in range(n):
+         w = np.random.dirichlet(np.ones(len(mu)))
+         r, s = calcular_portafolio(w, mu, sigma)
+         resultados['retorno'].append(r)
+         resultados['riesgo'].append(s)
+         resultados['sharpe'].append(r / s if s != 0 else 0)
+         resultados['pesos'].append(w)
+      return pd.DataFrame(resultados)
+
+   portafolios = simular_portafolios(retornos_esperados.values, cov.values)
+
+   # Portafolio Máxima Sharpe
+   def portafolio_max_sharpe(mu, sigma):
+      n = len(mu)
+      def objetivo(w): return -np.dot(w, mu) / np.sqrt(np.dot(w.T, np.dot(sigma, w)))
+      cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+      bounds = tuple((0, 1) for _ in range(n))
+      res = minimize(objetivo, np.repeat(1/n, n), bounds=bounds, constraints=cons)
+      return res.x
+
+   # Portafolio Mínima Varianza
+   def portafolio_min_varianza(sigma):
+      n = len(sigma)
+      def objetivo(w): return np.dot(w.T, np.dot(sigma, w))
+      cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+      bounds = tuple((0, 1) for _ in range(n))
+      res = minimize(objetivo, np.repeat(1/n, n), bounds=bounds, constraints=cons)
+      return res.x
+
+   w_sharpe = portafolio_max_sharpe(retornos_esperados.values, cov.values)
+   ret_sharpe, risk_sharpe = calcular_portafolio(w_sharpe, retornos_esperados.values, cov.values)
+
+   w_minvar = portafolio_min_varianza(cov.values)
+   ret_minvar, risk_minvar = calcular_portafolio(w_minvar, retornos_esperados.values, cov.values)
+
+   # Mostrar resultados lado a lado
+   col1, col2 = st.columns(2)
+
+   with col1:
+      st.subheader("Portafolio Máxima Sharpe Ratio")
+      df_sharpe = pd.DataFrame({'Ticker': precios.columns, 'Peso': w_sharpe})
+      st.dataframe(df_sharpe.style.format({'Peso': '{:.2%}'}))
+
+   with col2:
+      st.subheader("Portafolio Mínima Varianza")
+      df_minvar = pd.DataFrame({'Ticker': precios.columns, 'Peso': w_minvar})
+      st.dataframe(df_minvar.style.format({'Peso': '{:.2%}'}))
+
+   # Gráfico
+   fig, ax = plt.subplots(figsize=(10, 6))
+   sc = ax.scatter(portafolios['riesgo'], portafolios['retorno'], 
+                   c=portafolios['sharpe'], cmap='viridis', alpha=0.5)
+   ax.scatter(risk_sharpe, ret_sharpe, c='red', s=100, label='Máx Sharpe')
+   ax.scatter(risk_minvar, ret_minvar, c='blue', s=100, label='Mín Varianza')
+   ax.set_xlabel('Riesgo (Desviación estándar)')
+   ax.set_ylabel('Retorno Esperado')
+   ax.set_title('Frontera de Cartera Eficiente')
    ax.legend()
-   ax.grid(True)
+   plt.colorbar(sc, label='Sharpe Ratio')
    st.pyplot(fig)
 
-   # Mostrar resultados
-   st.subheader("📌 Resultados")
-   st.write(f"Portafolio de Menor Riesgo: {peso_min_riesgo*100:.2f}% en {ticker1} y {(1-peso_min_riesgo)*100:.2f}% en {ticker2}")
-   st.write(f"Rentabilidad Esperada: {rend_min_riesgo*100:.2f}% | Riesgo: {desv_min_riesgo*100:.2f}%")
-   st.write("---")
-   st.write(f"Portafolio Óptimo (Máx Sharpe Ratio): {peso_max_sharpe*100:.2f}% en {ticker1} y {(1-peso_max_sharpe)*100:.2f}% en {ticker2}")
-   st.write(f"Rentabilidad Esperada: {rend_max_sharpe*100:.2f}% | Riesgo: {desv_max_sharpe*100:.2f}%")
-   st.write(f"Sharpe Ratio Óptimo: {sharpe_ratios[idx_max_sharpe]:.2f}")
+
+if seccion == "creator of sector ETFs":
+
+
+   st.title("Optimización de Cartera Eficiente")
+
+   def obtener_pares_finviz(ticker):
+      try:
+         url = f"https://finviz.com/quote.ashx?t={ticker}"
+         headers = {"User-Agent": "fc4d1056-21d9-42b0-9dd9-4c947e694cfe"}
+         response = requests.get(url, headers=headers, timeout=10)
+         response.raise_for_status()
+
+         soup = BeautifulSoup(response.text, "html.parser")
+         link = soup.find("a", string="Peers")
+         if link and "href" in link.attrs:
+            href = link["href"]
+            if "t=" in href:
+               tickers_str = href.split("t=")[1]
+               pares = tickers_str.split(",")
+               return list(set(pares))  # elimina repetidos
+         st.warning("No se encontraron pares en la página de Finviz.")
+      except requests.exceptions.HTTPError as e:
+         st.error(f"Error al obtener la información de la emisora: {e}")
+      except Exception as e:
+         st.error(f"Ocurrió un error inesperado: {e}")
+      return []
+
+   ticker_base = symbol #st.text_input("Ticker base para obtener pares desde Finviz", "AAPL")
+   tickers = obtener_pares_finviz(ticker_base.upper())
+
+   if not tickers:
+      st.warning("No se pudieron obtener pares para el ticker ingresado.")
+      st.stop()
+
+   st.write("### Pares detectados:", ", ".join(tickers))
+
+   # Selección del número de años
+   anios = st.slider("Selecciona el número de años de datos históricos", 1, 10, 5)
+   fecha_fin = datetime.today()
+   fecha_inicio = fecha_fin - timedelta(days=anios * 365)
+   st.markdown(f"**Período de análisis:** {fecha_inicio.date()} a {fecha_fin.date()}")
+
+   @st.cache_data
+   def descargar_precios(tickers, start, end):
+      datos = yf.download(tickers, start=start, end=end, group_by="ticker", progress=False)
+      precios = pd.DataFrame()
+      for t in tickers:
+         try:
+            precios[t] = datos[t]['Close']
+         except Exception:
+            st.warning(f"No se pudo obtener precios para {t}.")
+      return precios.dropna(axis=1, how='any')
+
+   precios = descargar_precios(tickers, fecha_inicio.strftime("%Y-%m-%d"), fecha_fin.strftime("%Y-%m-%d"))
+   if precios.empty:
+      st.error("No se pudieron descargar precios para los tickers seleccionados.")
+      st.stop()
+
+   rendimientos = precios.pct_change().dropna()
+   retornos_esperados = rendimientos.mean() * 252
+   cov = rendimientos.cov() * 252
+
+   def calcular_portafolio(w, mu, sigma):
+      retorno = np.dot(w, mu)
+      riesgo = np.sqrt(np.dot(w.T, np.dot(sigma, w)))
+      return retorno, riesgo
+
+   def simular_portafolios(mu, sigma, n=5000):
+      resultados = {'retorno': [], 'riesgo': [], 'sharpe': [], 'pesos': []}
+      for _ in range(n):
+         w = np.random.dirichlet(np.ones(len(mu)))
+         r, s = calcular_portafolio(w, mu, sigma)
+         resultados['retorno'].append(r)
+         resultados['riesgo'].append(s)
+         resultados['sharpe'].append(r / s)
+         resultados['pesos'].append(w)
+      return pd.DataFrame(resultados)
+
+   portafolios = simular_portafolios(retornos_esperados.values, cov.values)
+
+   def portafolio_max_sharpe(mu, sigma):
+      n = len(mu)
+      def objetivo(w): return -np.dot(w, mu) / np.sqrt(np.dot(w.T, np.dot(sigma, w)))
+      cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+      bounds = tuple((0, 1) for _ in range(n))
+      res = minimize(objetivo, np.repeat(1/n, n), bounds=bounds, constraints=cons)
+      return res.x
+
+   def portafolio_min_varianza(mu, sigma):
+      n = len(mu)
+      def objetivo(w): return np.dot(w.T, np.dot(sigma, w))
+      cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+      bounds = tuple((0, 1) for _ in range(n))
+      res = minimize(objetivo, np.repeat(1/n, n), bounds=bounds, constraints=cons)
+      return res.x
+
+   w_opt = portafolio_max_sharpe(retornos_esperados.values, cov.values)
+   w_min = portafolio_min_varianza(retornos_esperados.values, cov.values)
+   ret_opt, risk_opt = calcular_portafolio(w_opt, retornos_esperados.values, cov.values)
+   ret_min, risk_min = calcular_portafolio(w_min, retornos_esperados.values, cov.values)
+
+   st.subheader("Portafolios Óptimos")
+   col1, col2 = st.columns(2)
+
+   with col1:
+      st.write("**Máxima Sharpe Ratio**")
+      df_opt = pd.DataFrame({'Ticker': precios.columns, 'Peso óptimo': w_opt})
+      st.dataframe(df_opt.style.format({'Peso óptimo': '{:.2%}'}))
+
+   with col2:
+      st.write("**Mínima Varianza**")
+      df_min = pd.DataFrame({'Ticker': precios.columns, 'Peso óptimo': w_min})
+      st.dataframe(df_min.style.format({'Peso óptimo': '{:.2%}'}))
+
+   fig, ax = plt.subplots(figsize=(10, 6))
+   sc = ax.scatter(portafolios['riesgo'], portafolios['retorno'], 
+                   c=portafolios['sharpe'], cmap='viridis', alpha=0.5)
+   ax.scatter(risk_opt, ret_opt, c='red', s=100, label='Máx Sharpe')
+   ax.scatter(risk_min, ret_min, c='blue', s=100, label='Min Varianza')
+   ax.set_xlabel('Riesgo (Desviación estándar)')
+   ax.set_ylabel('Retorno Esperado')
+   ax.set_title('Frontera de Cartera Eficiente')
+   ax.legend()
+   plt.colorbar(sc, label='Sharpe Ratio')
+   st.pyplot(fig)
+
+
+if seccion == "Informacion general":
+
+
+  HEADERS = {"User-Agent": "fc4d1056-21d9-42b0-9dd9-4c947e694cfe"}
+
+  def obtener_pares_finviz(ticker):
+    try:
+      url = f"https://finviz.com/quote.ashx?t={ticker}"
+      response = requests.get(url, headers=HEADERS, timeout=30)
+      response.raise_for_status()
+
+      soup = BeautifulSoup(response.text, "html.parser")
+      link = soup.find("a", string="Peers")
+      if link and "href" in link.attrs:
+        href = link["href"]
+        if "t=" in href:
+          tickers_str = href.split("t=")[1]
+          pares = tickers_str.split(",")
+          return list(set(pares))  # elimina repetidos
+      st.warning("No se encontraron pares en la página de Finviz.")
+    except requests.exceptions.HTTPError as e:
+      st.error(f"Error al obtener la información de la emisora: {e}")
+    except Exception as e:
+      st.error(f"Ocurrió un error inesperado: {e}")
+    return []
+
+  @st.cache_data(ttl=3600)
+  def obtener_datos_fundamentales(tickers):
+    datos = []
+    for t in tickers:
+      try:
+        info = yf.Ticker(t).info
+        datos.append({
+          "Ticker": t,
+          "Market Cap": info.get("marketCap"),
+          "Forward PE": info.get("forwardPE"),
+          "Price/Sales": info.get("priceToSalesTrailing12Months"),
+          "Price/Book": info.get("priceToBook"),
+          "EV/Revenue": info.get("enterpriseToRevenue"),
+          "EV/EBITDA": info.get("enterpriseToEbitda"),
+          "Dividend Yield": info.get("dividendYield"),
+          "Beta": info.get("beta"),
+          "ROE": info.get("returnOnEquity"),
+          "Margen Neto": info.get("profitMargins"),
+        })
+      except Exception as e:
+        st.warning(f"No se pudo obtener datos de {t}: {e}")
+    return pd.DataFrame(datos)
+
+  st.title("Comparativo")
+
+  ticker = symbol
+
+  if ticker:
+    pares = obtener_pares_finviz(ticker)
+    if not pares:
+      st.error("No se pudieron obtener pares para este ticker.")
+    else:
+      pares = [t for t in pares if t != ticker]
+
+      st.info(f"Pares de {ticker}: {', '.join(pares)}")
+
+      if len(pares) == 0:
+        st.warning("No hay pares disponibles tras excluir el ticker principal.")
+      else:
+        df = obtener_datos_fundamentales(pares)
+        if df.empty:
+          st.error("No se pudieron obtener datos fundamentales para los pares.")
+        else:
+          st.subheader("Datos fundamentales de los pares")
+          st.dataframe(df)
+
+
